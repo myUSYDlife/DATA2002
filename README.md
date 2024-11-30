@@ -68,6 +68,13 @@ Multiple R-squared:  0.7891,    Adjusted R-squared:  0.7844
 F-statistic: 168.1 on 11 and 494 DF,  p-value: < 2.2e-16
 ```
 
+## 👥 贡献者 本项目由以下成员共同完成： 
+- **组长：Baiheng Zhou**
+- **Seunghyun Lee**
+- **Zijun Shi**
+- **Jun Zhang**
+- **Yoffie Wu**
+
 ## 🔗 参考文献
 1. [Akaike, H. (1974). A new look at the statistical model identification. IEEE Transactions on Automatic Control, 19(6), 716-723.](https://doi.org/10.1109/TAC.1974.1100705)
 2. [Boston Housing Dataset](https://www.cs.toronto.edu/~delve/data/boston/bostonDetail.html)
