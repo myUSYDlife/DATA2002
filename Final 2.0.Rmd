@@ -1,0 +1,315 @@
+---
+title: "Boston House Price"
+subtitle: "Final Project"
+author: 
+  - "Baiheng Zhou --- Seunghyun Lee --- Zijun Shi"
+  - "Jun Zhang --- Yoffie Wu"
+  - "--------------------------------------------"
+date: "`r Sys.Date()`"
+output:
+  xaringan::moon_reader:
+    css: ["xaringan-themer.css", "assets/sydney-fonts.css", "assets/sydney.css"]
+    self_contained: false # if true, fonts will be stored locally
+    seal: true 
+    includes:
+      in_header: "assets/mathjax-equation-numbers.html"
+    nature:
+      beforeInit: ["assets/remark-zoom.js", "https://platform.twitter.com/widgets.js"]
+      highlightStyle: github
+      highlightLines: true
+      ratio: 16:9
+      countIncrementalSlides: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r xaringan-tile-view, echo=FALSE}
+xaringanExtra::use_tile_view()
+```
+
+```{r xaringan-scribble, echo=FALSE}
+xaringanExtra::use_scribble()
+```
+
+```{r xaringan-animate-css, echo=FALSE}
+xaringanExtra::use_animate_css()
+```
+
+```{r xaringan-panelset, echo=FALSE}
+xaringanExtra::use_panelset()
+```
+
+```{r, message=FALSE, echo=FALSE}
+library(tidyverse)
+library(knitr)
+library(gt)
+url = "https://raw.githubusercontent.com/DATA2002/data/master/boston.csv"
+boston_data = readr::read_csv(url)
+```
+
+# Data overview 
+
+```{r}
+dim(boston_data)
+glimpse(boston_data)
+```
+
+---
+
+# Data visualization
+
+```{r, message=FALSE, echo=FALSE}
+library(GGally)
+ggpairs(boston_data)
+```
+
+```{r, echo=FALSE}
+n = 506
+k = 13
+2^k
+cor_mat = cor(boston_data)
+melted_cor_mat = cor_mat %>%
+  data.frame() %>% 
+  rownames_to_column(var = "var1") %>% 
+  gather(key = "var2", value = "cor", -var1)
+ggplot(data = melted_cor_mat, 
+       aes(x=var1, y=var2, fill=cor)) + 
+geom_tile() + theme_minimal() +
+scale_fill_gradient2(
+    low = "blue", high = "red", mid = "white", 
+    midpoint = 0, limit = c(-1,1)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+---
+
+# Basic model (without any transformation) 
+
+```{r}
+M0 = lm(MEDV ~ 1, data = boston_data)  # Null model
+M1 = lm(MEDV ~ ., data = boston_data)  # Full model
+round(summary(M1)$coef, 3)
+t(round(broom::glance(M1), 2)) #adjusted rsquared : 0.73
+```
+
+```{r}
+#AIC  backward searching 
+M0 = lm(MEDV ~ 1, data = boston_data)  # Null model
+M1 = lm(MEDV ~ ., data = boston_data)  # Full model
+step.back.aic = step(M1, direction = "backward", trace = FALSE)
+step.back.aic %>% broom::glance() %>% round(2) %>% t()
+drop1(step.back.aic , test = "F")
+t(round(broom::glance(step.back.aic), 2))
+# we removed (indus, age), adjusted r.squared : 0.73
+```
+
+```{r}
+#AIC forward searching 
+M0 = lm(MEDV ~ 1, data = boston_data)  # Null model
+M1 = lm(MEDV ~ ., data = boston_data)  # Full model
+step.fwd.aic = step(M0, scope = list(lower = M0, upper = M1), direction = "forward", trace = FALSE)
+add1(step.fwd.aic, test="F", scope = M1)
+t(round(broom::glance(step.fwd.aic), 2)) 
+# we removed (indus, age), adjusted r-squared : 0.73
+```
+
+---
+
+# Log transformation :  MEDV, B, LSTAT, DIS, NOX
+
+For Linearity assumption, this report used log transformation. 
+
+```{r, message=FALSE, echo=FALSE}
+boston_data = readr::read_csv(url)
+boston_data = boston_data %>% 
+  mutate(MEDV = log(MEDV)) 
+boston_data = boston_data%>%
+  mutate(B = log(B))
+boston_data = boston_data%>%
+  mutate(LSTAT = log(LSTAT))
+boston_data = boston_data%>%
+  mutate(DIS = log(DIS))
+boston_data = boston_data%>%
+  mutate(NOX = log(NOX))
+ggpairs(boston_data)
+M0 = lm(MEDV ~ 1, data = boston_data)  # Null model
+M1 = lm(MEDV ~ ., data = boston_data)  # Full model
+round(summary(M1)$coef, 3)
+t(round(broom::glance(M1), 2)) #ADJUSTED r squared : 0.80
+```
+
+```{r}
+#AIC  backward searching 
+M0 = lm(MEDV ~ 1, data = boston_data)  # Null model
+M1 = lm(MEDV ~ ., data = boston_data)  # Full model
+step.back.aic = step(M1, direction = "backward", trace = FALSE)
+round(summary(step.back.aic)$coef, 3)
+drop1(step.back.aic , test = "F")
+t(round(broom::glance(step.back.aic), 2))
+# we removed (zn, indus, age), adjusted r-squared : 0.80
+```
+
+
+```{r}
+#AIC forward searching 
+M0 = lm(MEDV ~ 1, data = boston_data)  # Null model
+M1 = lm(MEDV ~ ., data = boston_data)  # Full model
+step.fwd.aic = step(M0, scope = list(lower = M0, upper = M1), direction = "forward", trace = FALSE)
+add1(step.fwd.aic, test="F", scope = M1)
+t(round(broom::glance(step.fwd.aic), 2)) 
+# we removed (zn, indus, age), adjusted r-squared : 0.80
+```
+
+```{r}
+stepm = step(M1)
+```
+
+```{r}
+stepm
+```
+
+---
+
+# Assumption checking 
+
+.panelset[
+.panel[.panel-name[Linearity]
+
+```{r panel-chunk1,fig.align='center',fig.width = 16,fig.height = 6.75, fig.retina=2, fig.align='center', warning=FALSE, echo=FALSE, message=FALSE}
+
+library(tidyverse)
+lrm = boston_data %>% 
+  ggplot(aes(x = RM, y = MEDV)) + 
+  geom_point(size = 0.3) + 
+  geom_smooth(method = "lm", se = T) + 
+  theme_grey(base_size = 8) + 
+  ggtitle("average number of rooms per dwelling") + 
+  theme(plot.title = element_text(size = 10, face = "bold")) +
+  ylim(1, 4.5)
+
+lnox = boston_data %>% 
+  ggplot(aes(x = NOX, y = MEDV)) + 
+  geom_point(size = 0.3) + 
+  geom_smooth(method = "lm", se = T) + 
+  theme_grey(base_size = 8) + 
+  ggtitle("Charles River dummy variable") + 
+  theme(plot.title = element_text(size = 10, face = "bold")) +
+  ylim(1, 4.5)
+
+ldis = boston_data %>% 
+  ggplot(aes(x = DIS, y = MEDV)) + 
+  geom_point(size = 0.3) + 
+  geom_hline(yintercept = 0) +
+  geom_smooth(method = "lm", se = T) + 
+  theme_grey(base_size = 8) + 
+  ggtitle("weighted distances to five Boston employment centres") + 
+  theme(plot.title = element_text(size = 10, face = "bold")) +
+  ylim(1, 4.5)
+
+ltax = boston_data %>% 
+  ggplot(aes(x = TAX, y = MEDV)) + 
+  geom_point(size = 0.3) + 
+  geom_hline(yintercept = 0) +
+  geom_smooth(method = "lm", se = T) +  
+  theme_grey(base_size = 8) + 
+  ggtitle("full-value property-tax rate per $10,000") + 
+  theme(plot.title = element_text(size = 10, face = "bold")) +
+  ylim(1, 4.5)
+
+lptra = boston_data %>% 
+  ggplot(aes(x = PTRATIO, y = MEDV)) + 
+  geom_point(size = 0.3) + 
+  geom_hline(yintercept = 0) +
+  geom_smooth(method = "lm", se = T) + 
+  theme_grey(base_size = 8) + 
+  ggtitle("pupil-teacher ratio by town") + 
+  theme(plot.title = element_text(size = 10, face = "bold")) +
+  ylim(1, 4.5)
+
+llstat = boston_data %>% 
+  ggplot(aes(x = LSTAT, y = MEDV)) + 
+  geom_point(size = 0.3) + 
+  geom_hline(yintercept = 0) +
+  geom_smooth(method = "lm", se = T) + 
+  theme_grey(base_size = 8) + 
+  ggtitle("% lower status of the population") + 
+  theme(plot.title = element_text(size = 10, face = "bold")) +
+  ylim(1, 4.5)
+
+gridExtra::grid.arrange(lrm, lnox, ldis, ltax, lptra, llstat, ncol = 3, nrow = 2)
+
+```
+
+]
+
+.panel[.panel-name[Normality]
+
+```{r panel-chunk2,fig.align='center',fig.width = 16,fig.height = 6.75, fig.retina=2, fig.align='center', warning=FALSE, echo=FALSE, message=FALSE}
+
+q1 = boston_data %>% ggplot(aes(sample = RM)) + 
+  geom_qq() + 
+  geom_qq_line() + 
+  ggtitle("RM") + 
+  theme(plot.title = element_text(size = 10, face = "bold")) + 
+  theme_grey(base_size = 8)
+
+q2 = boston_data %>% ggplot(aes(sample = NOX)) + 
+  geom_qq() + 
+  geom_qq_line() + 
+  ggtitle("NOX") + 
+  theme(plot.title = element_text(size = 10, face = "bold")) +
+  theme_grey(base_size = 8)
+
+q3 = boston_data %>% ggplot(aes(sample = DIS)) + 
+  geom_qq() + 
+  geom_qq_line() + 
+  ggtitle("DIS") + 
+  theme(plot.title = element_text(size = 10, face = "bold")) +
+  theme_grey(base_size = 8)
+
+q4 = boston_data %>% ggplot(aes(sample = TAX)) + 
+  geom_qq() + 
+  geom_qq_line() + 
+  ggtitle("TAX") + 
+  theme(plot.title = element_text(size = 10, face = "bold")) +
+  theme_grey(base_size = 8)
+
+q5 = boston_data %>% ggplot(aes(sample = PTRATIO)) + 
+  geom_qq() + 
+  geom_qq_line() + 
+  ggtitle("PTRATIO") + 
+  theme(plot.title = element_text(size = 10, face = "bold")) +
+  theme_grey(base_size = 8)
+
+q6 = boston_data %>% ggplot(aes(sample = LSTAT)) + 
+  geom_qq() + 
+  geom_qq_line() + 
+  ggtitle("LSTAT") + 
+  theme(plot.title = element_text(size = 10, face = "bold")) +
+  theme_grey(base_size = 8)
+
+gridExtra::grid.arrange(q1, q2, q3, q4, q5, q6, ncol = 3, nrow = 2)
+
+```
+
+]
+
+.panel[.panel-name[Total Performance]
+
+```{r panel-chunk3,fig.align='center',fig.width = 16,fig.height = 6.75, fig.retina=2, fig.align='center', warning=FALSE, echo=FALSE, message=FALSE}
+
+library(ggfortify)
+autoplot(stepm, which = 1:2) + theme_bw()
+
+```
+
+]
+]
+
+---
+
+# Question 
+
+-how are we going to deal with non -linear variables? like CHAS, RAD, TAX

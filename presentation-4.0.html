@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Understanding House Price in Science</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Baiheng Zhou — Seunghyun Lee — Zijun Shi" />
+    <meta name="author" content="Jun Zhang — Yoffie Wu" />
+    <meta name="author" content="——————————————–" />
+    <meta name="date" content="2021-10-30" />
+    <script src="presentation-4.0_files/header-attrs-2.11/header-attrs.js"></script>
+    <link href="presentation-4.0_files/tile-view-0.2.6/tile-view.css" rel="stylesheet" />
+    <script src="presentation-4.0_files/tile-view-0.2.6/tile-view.js"></script>
+    <script src="presentation-4.0_files/fabric-4.3.1/fabric.min.js"></script>
+    <link href="presentation-4.0_files/xaringanExtra-scribble-0.0.1/scribble.css" rel="stylesheet" />
+    <script src="presentation-4.0_files/xaringanExtra-scribble-0.0.1/scribble.js"></script>
+    <script>document.addEventListener('DOMContentLoaded', function() { window.xeScribble = new Scribble({"pen_color":["#FF0000"],"pen_size":3,"eraser_size":30,"palette":[]}) })</script>
+    <link href="presentation-4.0_files/panelset-0.2.6/panelset.css" rel="stylesheet" />
+    <script src="presentation-4.0_files/panelset-0.2.6/panelset.js"></script>
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } },
+      });
+    </script>
+    <style>
+    .mjx-mrow a {
+      color: black;
+      pointer-events: none;
+      cursor: default;
+    }
+    </style>
+    <link rel="stylesheet" href="assets/sydney-fonts.css" type="text/css" />
+    <link rel="stylesheet" href="assets/sydney.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Understanding House Price in Science
+## Final Project
+### Baiheng Zhou — Seunghyun Lee — Zijun Shi
+### Jun Zhang — Yoffie Wu
+### ——————————————–
+### 2021-10-30
+
+---
+
+
+
+
+
+
+
+
+
+
+
+
+class: segue-red
+
+## &lt;span style="color:white"&gt; Introduction and Data description&lt;/span&gt;
+
+## Appropriate model selection with Four Assumptions
+
+## Conclusions and Limitations
+
+---
+
+class: segue-red
+
+# &lt;span style="color:white"&gt;Part 1: Introduction and Data description&lt;/span&gt;
+
+---
+
+class: segue
+
+background-image: url("https://www.healthyplace.com/sites/default/files/blogs/Anxiety-140-Healthyplace.jpg")
+background-position: 100% 100%
+background-size: 100% 100%
+
+--
+
+class: segue
+
+&lt;div style="font-size:100px"&gt;&lt;span style = "color:gold"&gt;Raising House Price !!!&lt;/span&gt;&lt;/div&gt;
+
+---
+
+class: segue
+
+## &lt;span style = "color:white"&gt;Find a way to balance people's wealth and numerous elements that can effect the house price&lt;/span&gt;
+
+## &lt;span style = "color:white"&gt;**Predict** the price with the dataset by&lt;/span&gt; &lt;span style = "color:yellow"&gt;**Multiple Regression**&lt;/span&gt;
+
+---
+
+# The Boston Housing Dataset
+
+- 506 .red[cases] in different towns about Boston housing in 14 .blue[variables] collected by *the U.S Census Service concerning housing in the area of Boston Mass*.
+
+- The **prototask** of this dataset: .red[price], in which **the median value of a home** is to be **predicted**.
+
+
+```r
+knitr::kable(head(boston_data))
+```
+
+
+
+|    CRIM| ZN| INDUS| CHAS|   NOX|    RM|  AGE|    DIS| RAD| TAX| PTRATIO|      B| LSTAT| MEDV|
+|-------:|--:|-----:|----:|-----:|-----:|----:|------:|---:|---:|-------:|------:|-----:|----:|
+| 0.00632| 18|  2.31|    0| 0.538| 6.575| 65.2| 4.0900|   1| 296|    15.3| 396.90|  4.98| 24.0|
+| 0.02731|  0|  7.07|    0| 0.469| 6.421| 78.9| 4.9671|   2| 242|    17.8| 396.90|  9.14| 21.6|
+| 0.02729|  0|  7.07|    0| 0.469| 7.185| 61.1| 4.9671|   2| 242|    17.8| 392.83|  4.03| 34.7|
+| 0.03237|  0|  2.18|    0| 0.458| 6.998| 45.8| 6.0622|   3| 222|    18.7| 394.63|  2.94| 33.4|
+| 0.06905|  0|  2.18|    0| 0.458| 7.147| 54.2| 6.0622|   3| 222|    18.7| 396.90|  5.33| 36.2|
+| 0.02985|  0|  2.18|    0| 0.458| 6.430| 58.7| 6.0622|   3| 222|    18.7| 394.12|  5.21| 28.7|
+
+- Table shows the *first 6 cases* in dataset
+
+---
+
+- CRIM - per capita **crime rate** by town
+- ZN - **proportion of residential land zoned** for lots over 25,000 sq.ft.
+- INDUS - proportion of **non-retail business acres** per town.
+- CHAS - Charles River dummy variable (1 if tract bounds river; 0 otherwise)
+- NOX - **nitric oxides concentration** (parts per 10 million)
+- RM - average **number of rooms** per dwelling
+- AGE - proportion of owner-occupied units built prior to 1940
+- DIS - weighted **distances** to five Boston employment **centres**
+- RAD - index of **accessibility to radial highways**
+- TAX - full-value **property-tax rate** per $10,000
+- PTRATIO - **pupil-teacher ratio** by town
+- B - 1000(Bk - 0.63)^2 where Bk is **the proportion of blacks** by town
+- LSTAT - % lower status of the **population**
+- MEDV - .red[**Median value of owner-occupied homes in $1000's**]
+
+---
+
+class: segue-red
+
+## &lt;span style="color:white"&gt;Part 2: Appropriate model selection with Four Assumptions&lt;/span&gt;
+
+---
+
+class: segue
+
+## &lt;span style = "color:white"&gt;**Simple Model**: the prediction value with &lt;span style = "color:yellow"&gt;**one**&lt;/span&gt; variable&lt;/span&gt;
+
+## &lt;span style = "color:white"&gt;**Full Model**: the prediction value with &lt;span style = "color:yellow"&gt;**all**&lt;/span&gt; variables&lt;/span&gt;
+
+## &lt;span style = "color:white"&gt;**Step Model**: the prediction value with variables after &lt;span style = "color:yellow"&gt;**forward and backward**&lt;/span&gt; stepwise selection by &lt;span style = "color:yellow"&gt;**Akaike information criterion (AIC)**&lt;/span&gt; &lt;/span&gt;
+
+---
+
+# Basic model without any transformation
+
+&lt;img src="presentation-4.0_files/figure-html/unnamed-chunk-3-1.png" width="1152" style="display: block; margin: auto;" /&gt;
+
+--
+
+.font160[**Cannot pass .red[Linearity assumption] !!! ⚠️**]
+
+---
+
+# .red[Log] transformation was used for **MEDV** column
+
+.panelset[
+.panel[.panel-name[New full model]
+
+&lt;img src="presentation-4.0_files/figure-html/unnamed-chunk-4-1.png" width="1152" style="display: block; margin: auto;" /&gt;
+
+]
+
+.panel[.panel-name[Assumptions]
+
+- .font120[Linearity : ✅ No obvious pattern in Residuals vs Fitted values plot.]
+
+
+- .font120[Homoskedasticity : ✅ The residuals don't appear to be fanning out over the range of the fitted value.]
+
+
+- .font120[Independence : ✅ Data selected natural from different towns. ]
+
+
+- .font120[Normality : ✅ Most patterns stick to the diagonal line. (this data has large sample size (506), we can apply the Central Limit Theorem.)]
+
+## *All of the assumptions are met.* 
+
+]
+]
+
+---
+
+# AIC .orange[backward] and .purple[forward] searching
+
+- **Backward**: Variables were .orange[**removed**] from the full model until AIC no longer decreased.
+
+- **Forward**: Variables were .purple[**added**] to the null model until AIC no longer decreased.
+
+.panelset[
+.panel[.panel-name[Backward Model]
+
+.scroll-box-10[
+
+
+```
+## Single term deletions
+## 
+## Model:
+## log(MEDV) ~ CRIM + ZN + CHAS + NOX + RM + DIS + RAD + TAX + PTRATIO + 
+##     B + LSTAT
+##         Df Sum of Sq    RSS     AIC  F value    Pr(&gt;F)    
+## &lt;none&gt;               17.791 -1670.0                       
+## CRIM     1    2.2229 20.014 -1612.4  61.7210 2.490e-14 ***
+## ZN       1    0.1451 17.936 -1667.9   4.0275 0.0453085 *  
+## CHAS     1    0.3399 18.131 -1662.4   9.4369 0.0022439 ** 
+## NOX      1    0.9350 18.726 -1646.1  25.9604 4.969e-07 ***
+## RM       1    1.1171 18.909 -1641.2  31.0177 4.205e-08 ***
+## DIS      1    1.7385 19.530 -1624.8  48.2722 1.176e-11 ***
+## RAD      1    1.0088 18.800 -1644.1  28.0119 1.817e-07 ***
+## TAX      1    0.6139 18.405 -1654.8  17.0452 4.285e-05 ***
+## PTRATIO  1    1.8862 19.678 -1621.0  52.3730 1.765e-12 ***
+## B        1    0.5344 18.326 -1657.0  14.8389 0.0001325 ***
+## LSTAT    1    8.1604 25.952 -1481.0 226.5848 &lt; 2.2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+]
+
+]
+
+.panel[.panel-name[Forward Model]
+
+.scroll-box-10[
+
+
+```
+## Single term additions
+## 
+## Model:
+## log(MEDV) ~ LSTAT + PTRATIO + CRIM + RM + DIS + NOX + B + RAD + 
+##     TAX + CHAS + ZN
+##        Df Sum of Sq    RSS     AIC F value Pr(&gt;F)
+## &lt;none&gt;              17.791 -1670.0               
+## INDUS   1  0.036264 17.755 -1669.0  1.0069 0.3161
+## AGE     1  0.005756 17.786 -1668.2  0.1595 0.6898
+```
+
+]
+
+]
+]
+
+Both model remove **variables INDUS and AGE**
+
+---
+
+## Hypothesis testing 
+
+### Dropping out the AGE
+
+&gt; `\(log(MEDV) = O + \beta_1 CRIM + \beta_2 ZN + \beta_3 CHAS + \beta_4 NOX + \beta_5 RM + \beta_6 DIS + \beta_7 RAD \\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ + \beta_8 TAX + \beta_9 PTRATIO + \beta_{10} B + \beta_{11} LSTAT + \beta_{12} INDUS + \beta_{13} AGE+ ε\)`
+
+- **Hypothesis**: `\(H_0: β_{13}=0\)` vs `\(H_1: β_{13}≠0\)`
+
+- **Assumptions**: The residuals `\(ε_i\)` are iid `\(N(0,σ^2)\)` and there is a linear relationship between y and x..white[sds] .green[ (All of the assumptions are met. ✅)]
+
+- **Test Statistic**: `\(T=\hat{β_{13}}/SE(\hat{β_{13}})∼t_{n−p}\)` under `\(H_0\)` where p is the number of estimated coefficients (including the intercept) and n is the sample size.
+
+- **Observed test statistic**: `\(t_0 = 0.0002106/ 0.0005287 = 0.398\)`
+
+- **P-value**: `\(2P(t_{492}&gt;= |0.398|) = 0.691\)`
+
+- **Conclusion**: Do not reject `\(H_0\)` at the 5% level of significance as the p-value is greater than 0.05. Hence, there is no evidence to suggest that there is a significant linear relationship between MEDV and AGE and it can be dropped from the model. 
+
+---
+
+# Find the **best** model
+
+- RMSE: Root mean square error
+- MAE: Mean absolute error
+
+&lt;img src="presentation-4.0_files/figure-html/unnamed-chunk-7-1.png" width="1080" style="display: block; margin: auto;" /&gt;
+
+--
+
+## .darkred[Step model] is the best choice
+
+---
+
+# Final **stable regression model**
+
+Because AIC forward and backward searching selected same significant variables on predicting house price.
+
+
+```
+## 
+## Call:
+## lm(formula = log(MEDV) ~ CRIM + ZN + CHAS + NOX + RM + DIS + 
+##     RAD + TAX + PTRATIO + B + LSTAT, data = boston_data)
+## 
+## Coefficients:
+## (Intercept)         CRIM           ZN         CHAS          NOX           RM  
+##   4.0836823   -0.0103187    0.0010874    0.1051484   -0.7217440    0.0906728  
+##         DIS          RAD          TAX      PTRATIO            B        LSTAT  
+##  -0.0517059    0.0134457   -0.0005579   -0.0374259    0.0004127   -0.0286039
+```
+
+--
+
+.white[empty line]
+
+&gt; `\(log(MEDV) = 4.0837 - 0.0103 \times CRIM + 0.0011 \times ZN + 0.1051 \times CHAS \\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ - 0.7217 \times NOX + 0.0907 \times RM - 0.0517 \times DIS + 0.0134 \times RAD \\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ - 0.0006 \times TAX - 0.0374 \times PTRATIO + 0.0004 \times B - 0.0286 \times LSTAT + ε\)`
+
+---
+
+# .blue[Step model] plots
+
+.panelset[
+.panel[.panel-name[The best model]
+
+&lt;img src="presentation-4.0_files/figure-html/unnamed-chunk-9-1.png" width="1152" style="display: block; margin: auto;" /&gt;
+
+]
+
+.panel[.panel-name[Assumptions]
+
+- .font120[Linearity : ✅ No obvious pattern in Residuals vs Fitted values plot.]
+
+
+- .font120[Homoskedasticity : ✅ The residuals don't appear to be fanning out over the range of the fitted value.]
+
+
+- .font120[Independence : ✅ Data selected natural from different towns. ]
+
+
+- .font120[Normality : ✅ Most patterns stick to the diagonal line. (this data has large sample size (506), we can apply the Central Limit Theorem.)]
+
+## *All of the assumptions are met.* 
+
+]
+]
+
+---
+
+class: segue-red
+
+# Part 3: Conclusions and Limitations
+
+---
+
+# Conclusions
+
+&gt; `\(log(MEDV) = 4.0837 - 0.0103 \times CRIM + 0.0011 \times ZN + 0.1051 \times CHAS \\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ - 0.7217 \times NOX + 0.0907 \times RM - 0.0517 \times DIS + 0.0134 \times RAD \\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ - 0.0006 \times TAX - 0.0374 \times PTRATIO + 0.0004 \times B - 0.0286 \times LSTAT + ε\)`
+
+.white[empty line]
+
+**Log-linear model** `$$log(Y) = \beta_0 + \beta_1x$$` On average, a one unit increase in `\(x\)` will result in a `\(\beta_1\)` * 100% change in `\(Y\)`. 
+
+
+.scroll-box-8[
+
+- A one degree parts per million(ppm) increase in NOX results in 72.17% decrease in MEDV on average, holding other variables are constant. 
+- A 1 CHAS (if tract bounds Charles River) results in 10.51% increase in MEDV on average, holding other variables are constant.
+- A one number of room increase in RM results in 9.07% increase in MEDV on average, holding other variables are constant.
+- A one unit weighted distances to five Boston employment centres increase in DIS results in 5.17% decrease in MEDV on average, holding other variables are constant.
+- A one percent  increase in PTRATIO results in 3.75% decrease in MEDV on average, holding other variables are constant.
+- A one percent increase in LSTAT results in 2.86% decrease in MEDV on average, holding other variables are constant.
+- A one index increase in RAD results in 1.34% increase in MEDV on average, holding other variables are constant.
+- A one unit of rate increase in CRIM results in 1.03% decrease in MEDV on average, holding other variables are constant.
+- A one unit of proportion  increase in ZN results in 0.11% increase in MEDV on average, holding other variables are constant.
+- A one increase in TAX results in 0.06% decrease in MEDV on average, holding other variables are constant.
+- A one 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town increase in B results in 0.04% increase in MEDV on average, holding other variables are constant.
+
+]
+
+---
+
+# Key Conclusions
+
+.blockquote[- House price down ⬇️: CRIM, NOX, DIS, TAX, PTRATIO, LSTAT
+- House price up ⬆️: ZN, CHAS, RM, RAD, B]
+
+As NOX and CHAS is a variable that effects the house price the most, we can infer that the demand for the clean air and nature view was high at that moment, which also aligns with the fact that the data was originally published in "Hedonic prices and the demand for clean air".
+
+The increase in room number (represented by RM), decrease to five Boston employment centres(represented by DIS), decrease pupil-teacher ratio by town (represented by PTRATIO) is also factor that increases the boston price.  
+
+The bigger the ratio of lower status of the population, it  decreased the Boston house price and better accessibility to radial highways increased the Boston house price while increase in crime rate decreased the Boston house price. 
+
+---
+
+# Limitations
+
+- Assumption for Homoskedascity : Even though the residuals vs fitted plot showed fairly random plot, since it had some part mildly fanning out, further test is needed for Homoskedascity. 
+
+- Bounded MEDV : The house price (MEDV) was censored at 50.00 (50,000 dollar). That is, 16 cases that has 50.00 at their MEDV might have higher price than $50,000. Therefore, further research with precise house price is needed to get the model that is better representing the Boston house price. 
+
+- Small sized data set : The data set has 506 cases, which is large enough to make the model statistically reliable and representative. However, as the dataset sheet argued, it is not enough number to represetn the whole Boston house price. Increased number of data with better representation on overall Boston house price is needed to make the model more representative. 
+
+
+---
+
+# References
+
+Alan Crawford. (2021, September 20). *The Global Housing Market Is Broken, and It’s Dividing Entire Countries*. Available at: https://www.bloomberg.com/news/features/2021-09-19/global-housing-markets-are-hurting-and-it-s-getting-political
+
+Harrison, D. &amp; Rubinfeld, D.L. (1978). *The Boston Housing Dataset*. Available at: https://www.cs.toronto.edu/~delve/data/boston/bostonDetail.html
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="assets/remark-zoom.js"></script>
+<script src="https://platform.twitter.com/widgets.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"ratio": "16:9",
+"countIncrementalSlides": true
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

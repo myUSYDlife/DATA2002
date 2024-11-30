@@ -1,0 +1,123 @@
+---
+title: "Boston House Price"
+subtitle: "Final Project"
+author: 
+  - "Baiheng Zhou --- Seunghyun Lee --- Zijun Shi"
+  - "Jun Zhang --- Yoffie Wu"
+date: "`r Sys.Date()`"
+output:
+  xaringan::moon_reader:
+    css: ["xaringan-themer.css", "assets/sydney-fonts.css", "assets/sydney.css"]
+    self_contained: false # if true, fonts will be stored locally
+    seal: true 
+    nature:
+      beforeInit: ["assets/remark-zoom.js", "https://platform.twitter.com/widgets.js"]
+      highlightStyle: github
+      highlightLines: true
+      ratio: 16:9
+      countIncrementalSlides: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r xaringan-tile-view, echo=FALSE}
+xaringanExtra::use_tile_view()
+```
+
+```{r xaringan-scribble, echo=FALSE}
+xaringanExtra::use_scribble()
+```
+
+```{r xaringan-animate-css, echo=FALSE}
+xaringanExtra::use_animate_css()
+```
+
+```{r xaringan-panelset, echo=FALSE}
+xaringanExtra::use_panelset()
+```
+
+```{r, echo=FALSE}
+
+library(xaringanthemer)
+style_mono_light(
+  base_color = "#1c5253",
+  header_font_google = google_font("Josefin Sans"),
+  text_font_google   = google_font("Montserrat", "300", "300i"),
+  code_font_google   = google_font("Fira Mono")
+)
+
+```
+
+
+
+# Hello
+
+
+```{r, message=FALSE, echo=FALSE}
+
+library(tidyverse)
+url = "https://raw.githubusercontent.com/DATA2002/data/master/boston.csv"
+boston_data = readr::read_csv(url)
+boston_data
+
+```
+
+---
+
+```{r xaringan-editable, echo=FALSE}
+xaringanExtra::use_editable(expires = 1)
+```
+
+## .can-edit[You can edit this slide title]
+
+## .can-edit.key-firstSlideTitle[Change this title and then reload the page]
+
+Hello, .can-edit[world], and welcome to my talk!
+
+## A few of my favorite things
+
+.can-edit.key-likes[
+- thing one
+- thing two
+]
+
+---
+class: animated slideInRight fadeOutLeft
+
+## This slide...
+
+---
+### plots
+
+```{r echo=FALSE}
+xaringanExtra::style_panelset_tabs(foreground = "honeydew", background = "seagreen")
+```
+
+.panelset[
+.panel[.panel-name[Plot1]
+
+```{r panel-chunk,fig.align='center',fig.width = 12,fig.height=6,echo=FALSE}
+# ... r code ...
+library(tidyverse)
+(g <- ggplot(boston_data) + aes(MEDV, CRIM) + geom_point() + theme_classic(base_size = 30))
+```
+]
+
+.panel[.panel-name[Plot2]
+
+<center><img src="https://octodex.github.com/images/labtocat.png" height="500" /></center>
+
+]
+]
+
+---
+
+gfhfggho
+
+
+
+
+
+

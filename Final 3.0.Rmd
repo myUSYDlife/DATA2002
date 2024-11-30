@@ -1,0 +1,381 @@
+---
+title: "Understanding House Price in Science"
+subtitle: "Final Project"
+author: 
+  - "Baiheng Zhou --- Seunghyun Lee --- Zijun Shi"
+  - "Jun Zhang --- Yoffie Wu"
+  - "--------------------------------------------"
+date: "`r Sys.Date()`"
+output:
+  xaringan::moon_reader:
+    css: ["assets/sydney-fonts.css", "assets/sydney.css"]
+    self_contained: false # if true, fonts will be stored locally
+    seal: true 
+    includes:
+      in_header: "assets/mathjax-equation-numbers.html"
+    nature:
+      beforeInit: ["assets/remark-zoom.js", "https://platform.twitter.com/widgets.js"]
+      highlightStyle: github
+      highlightLines: true
+      ratio: 16:9
+      countIncrementalSlides: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r xaringan-tile-view, echo=FALSE}
+xaringanExtra::use_tile_view()
+```
+
+```{r xaringan-scribble, echo=FALSE}
+xaringanExtra::use_scribble()
+```
+
+```{r xaringan-animate-css, echo=FALSE}
+xaringanExtra::use_animate_css()
+```
+
+```{r xaringan-panelset, echo=FALSE}
+xaringanExtra::use_panelset()
+```
+
+```{r, message=FALSE, echo=FALSE}
+library(tidyverse)
+library(knitr)
+library(gt)
+url = "https://raw.githubusercontent.com/DATA2002/data/master/boston.csv"
+boston_data = readr::read_csv(url)
+```
+
+class: segue-red
+
+## <span style="color:white">Data description</span>
+
+## Appropriate model selection
+
+## Assumption checking
+
+## Discussion of results
+
+## Clarity of the key messages
+
+---
+
+class: segue-red
+
+# <span style="color:white">Part 1: Data description</span>
+
+---
+
+class: segue
+
+background-image: url("https://www.healthyplace.com/sites/default/files/blogs/Anxiety-140-Healthyplace.jpg")
+background-position: 100% 100%
+background-size: 100% 100%
+
+--
+
+class: segue
+
+<div style="font-size:100px"><span style = "color:gold">Raising House Price !!!</span></div>
+
+---
+
+class: segue
+
+## <span style = "color:white">Find a way to balance people's wealth and numerous elements that can effect the house price</span>
+
+## <span style = "color:white">**Predict** the price with the dataset by</span> <span style = "color:yellow">**Multiple Regression**</span>
+
+---
+
+# The Boston Housing Dataset
+
+- 506 .red[cases] in different towns about Boston housing in 14 .blue[variables] collected by *the U.S Census Service concerning housing in the area of Boston Mass*.
+
+- The **prototask** of this dataset: .red[price], in which **the median value of a home** is to be **predicted**.
+
+
+```{r}
+
+knitr::kable(head(boston_data))
+
+```
+
+---
+
+- CRIM - per capita **crime rate** by town
+- ZN - **proportion of residential land zoned** for lots over 25,000 sq.ft.
+- INDUS - proportion of **non-retail business acres** per town.
+- CHAS - Charles River dummy variable (1 if tract bounds river; 0 otherwise)
+- NOX - **nitric oxides concentration** (parts per 10 million)
+- RM - average **number of rooms** per dwelling
+- AGE - proportion of owner-occupied units built prior to 1940
+- DIS - weighted **distances** to five Boston employment **centres**
+- RAD - index of **accessibility to radial highways**
+- TAX - full-value **property-tax rate** per $10,000
+- PTRATIO - **pupil-teacher ratio** by town
+- B - 1000(Bk - 0.63)^2 where Bk is **the proportion of blacks** by town
+- LSTAT - % lower status of the **population**
+- MEDV - .red[**Median value of owner-occupied homes in $1000's**]
+
+---
+
+class: segue-red
+
+# <span style="color:white">Part 2: Appropriate model selection</span>
+
+---
+
+class: segue
+
+## <span style = "color:white">**Simple Model**: the prediction value with <span style = "color:yellow">**one**</span> variable</span>
+
+## <span style = "color:white">**Full Model**: the prediction value with <span style = "color:yellow">**all**</span> variables</span>
+
+## <span style = "color:white">**Step Model**: the prediction value with variables after <span style = "color:yellow">**forward and backward**</span> stepwise selection by <span style = "color:yellow">**Akaike information criterion (AIC)**</span> </span>
+
+---
+
+# Basic model (without any transformation) 
+
+```{r}
+M0 = lm(MEDV ~ 1, data = boston_data)  # Null model
+M1 = lm(MEDV ~ ., data = boston_data)  # Full model
+round(summary(M1)$coef, 3)
+t(round(broom::glance(M1), 2)) #adjusted rsquared : 0.73
+```
+
+```{r}
+#AIC  backward searching 
+M0 = lm(MEDV ~ 1, data = boston_data)  # Null model
+M1 = lm(MEDV ~ ., data = boston_data)  # Full model
+step.back.aic = step(M1, direction = "backward", trace = FALSE)
+step.back.aic %>% broom::glance() %>% round(2) %>% t()
+drop1(step.back.aic , test = "F")
+t(round(broom::glance(step.back.aic), 2))
+# we removed (indus, age), adjusted r.squared : 0.73
+```
+
+```{r}
+#AIC forward searching 
+M0 = lm(MEDV ~ 1, data = boston_data)  # Null model
+M1 = lm(MEDV ~ ., data = boston_data)  # Full model
+step.fwd.aic = step(M0, scope = list(lower = M0, upper = M1), direction = "forward", trace = FALSE)
+add1(step.fwd.aic, test="F", scope = M1)
+t(round(broom::glance(step.fwd.aic), 2)) 
+# we removed (indus, age), adjusted r-squared : 0.73
+```
+
+---
+
+# Log transformation :  MEDV
+
+For Linearity assumption, this report used <span style="color:red">**log**</span> transformation. 
+
+```{r, message=FALSE, echo=FALSE}
+
+boston_data = readr::read_csv(url)
+boston_data = boston_data %>% 
+  mutate(LMEDV = log(MEDV)) 
+M0 = lm(LMEDV ~ 1, data = boston_data)  # Null model
+M1 = lm(LMEDV ~ . - MEDV, data = boston_data)  # Full model
+round(summary(M1)$coef, 3)
+t(round(broom::glance(M1), 2)) #ADJUSTED r squared : 0.80
+
+```
+
+```{r}
+#AIC  backward searching 
+M0 = lm(LMEDV ~ 1, data = boston_data)  # Null model
+M1 = lm(LMEDV ~ . - MEDV, data = boston_data)  # Full model
+step.back.aic = step(M1, direction = "backward", trace = FALSE)
+round(summary(step.back.aic)$coef, 3)
+drop1(step.back.aic , test = "F")
+t(round(broom::glance(step.back.aic), 2))
+# we removed (zn, indus, age), adjusted r-squared : 0.80
+```
+
+
+```{r}
+#AIC forward searching 
+M0 = lm(LMEDV ~ 1, data = boston_data)  # Null model
+M1 = lm(LMEDV ~ . - MEDV, data = boston_data)  # Full model
+step.fwd.aic = step(M0, scope = list(lower = M0, upper = M1), direction = "forward", trace = FALSE)
+add1(step.fwd.aic, test="F", scope = M1)
+t(round(broom::glance(step.fwd.aic), 2)) 
+# we removed (zn, indus, age), adjusted r-squared : 0.80
+```
+
+```{r}
+stepm = step(M1)
+```
+
+```{r}
+stepm
+lm(LMEDV ~ CRIM, data = boston_data)
+```
+
+---
+
+class: segue-red
+
+# Part 3: Assumption checking
+
+---
+
+.panelset[
+.panel[.panel-name[Linearity]
+
+```{r panel-chunk1, echo=FALSE, fig.align='center', fig.height=6.75, fig.retina=2, fig.width=16, message=FALSE, warning=FALSE}
+
+library(tidyverse)
+lrm = boston_data %>% 
+  ggplot(aes(x = RM, y = LMEDV)) + 
+  geom_point(size = 0.3) + 
+  geom_smooth(method = "lm", se = T) + 
+  theme_grey(base_size = 8) + 
+  ggtitle("average number of rooms per dwelling") + 
+  theme(plot.title = element_text(size = 10, face = "bold"))
+
+lnox = boston_data %>% 
+  ggplot(aes(x = NOX, y = MEDV)) + 
+  geom_point(size = 0.3) + 
+  geom_smooth(method = "lm", se = T) + 
+  theme_grey(base_size = 8) + 
+  ggtitle("Charles River dummy variable") + 
+  theme(plot.title = element_text(size = 10, face = "bold"))
+
+ldis = boston_data %>% 
+  ggplot(aes(x = DIS, y = MEDV)) + 
+  geom_point(size = 0.3) + 
+  geom_hline(yintercept = 0) +
+  geom_smooth(method = "lm", se = T) + 
+  theme_grey(base_size = 8) + 
+  ggtitle("weighted distances to five Boston employment centres") + 
+  theme(plot.title = element_text(size = 10, face = "bold")) 
+
+ltax = boston_data %>% 
+  ggplot(aes(x = TAX, y = MEDV)) + 
+  geom_point(size = 0.3) + 
+  geom_hline(yintercept = 0) +
+  geom_smooth(method = "lm", se = T) +  
+  theme_grey(base_size = 8) + 
+  ggtitle("full-value property-tax rate per $10,000") + 
+  theme(plot.title = element_text(size = 10, face = "bold"))
+
+lptra = boston_data %>% 
+  ggplot(aes(x = PTRATIO, y = MEDV)) + 
+  geom_point(size = 0.3) + 
+  geom_hline(yintercept = 0) +
+  geom_smooth(method = "lm", se = T) + 
+  theme_grey(base_size = 8) + 
+  ggtitle("pupil-teacher ratio by town") + 
+  theme(plot.title = element_text(size = 10, face = "bold")) 
+
+llstat = boston_data %>% 
+  ggplot(aes(x = LSTAT, y = MEDV)) + 
+  geom_point(size = 0.3) + 
+  geom_hline(yintercept = 0) +
+  geom_smooth(method = "lm", se = T) + 
+  theme_grey(base_size = 8) + 
+  ggtitle("% lower status of the population") + 
+  theme(plot.title = element_text(size = 10, face = "bold"))
+
+gridExtra::grid.arrange(lrm, lnox, ldis, ltax, lptra, llstat, ncol = 3, nrow = 2)
+
+```
+
+]
+
+.panel[.panel-name[Normality]
+
+```{r panel-chunk2,fig.align='center',fig.width = 16,fig.height = 6.75, fig.retina=2, fig.align='center', warning=FALSE, echo=FALSE, message=FALSE}
+
+q1 = boston_data %>% ggplot(aes(sample = RM)) + 
+  geom_qq() + 
+  geom_qq_line() + 
+  ggtitle("RM") + 
+  theme(plot.title = element_text(size = 10, face = "bold")) + 
+  theme_grey(base_size = 8)
+
+q2 = boston_data %>% ggplot(aes(sample = NOX)) + 
+  geom_qq() + 
+  geom_qq_line() + 
+  ggtitle("NOX") + 
+  theme(plot.title = element_text(size = 10, face = "bold")) +
+  theme_grey(base_size = 8)
+
+q3 = boston_data %>% ggplot(aes(sample = DIS)) + 
+  geom_qq() + 
+  geom_qq_line() + 
+  ggtitle("DIS") + 
+  theme(plot.title = element_text(size = 10, face = "bold")) +
+  theme_grey(base_size = 8)
+
+q4 = boston_data %>% ggplot(aes(sample = TAX)) + 
+  geom_qq() + 
+  geom_qq_line() + 
+  ggtitle("TAX") + 
+  theme(plot.title = element_text(size = 10, face = "bold")) +
+  theme_grey(base_size = 8)
+
+q5 = boston_data %>% ggplot(aes(sample = PTRATIO)) + 
+  geom_qq() + 
+  geom_qq_line() + 
+  ggtitle("PTRATIO") + 
+  theme(plot.title = element_text(size = 10, face = "bold")) +
+  theme_grey(base_size = 8)
+
+q6 = boston_data %>% ggplot(aes(sample = LSTAT)) + 
+  geom_qq() + 
+  geom_qq_line() + 
+  ggtitle("LSTAT") + 
+  theme(plot.title = element_text(size = 10, face = "bold")) +
+  theme_grey(base_size = 8)
+
+gridExtra::grid.arrange(q1, q2, q3, q4, q5, q6, ncol = 3, nrow = 2)
+
+```
+
+]
+
+.panel[.panel-name[Total Performance]
+
+```{r panel-chunk3,fig.align='center',fig.width = 16,fig.height = 6.75, fig.retina=2, fig.align='center', warning=FALSE, echo=FALSE, message=FALSE}
+
+library(ggfortify)
+autoplot(stepm, which = 1:2) + theme_bw()
+
+```
+
+]
+]
+
+---
+
+# Question 
+
+-how are we going to deal with non -linear variables? like CHAS, RAD, TAX
+
+---
+
+class: segue-red
+
+# Part 4: Discussion of results
+
+---
+
+class: segue-red
+
+# Part 5: Clarity of the key messages
+
+---
+
+# References
+
+Alan Crawford. (2021, September 20). *The Global Housing Market Is Broken, and It’s Dividing Entire Countries*. Available at: https://www.bloomberg.com/news/features/2021-09-19/global-housing-markets-are-hurting-and-it-s-getting-political
+
+Harrison, D. & Rubinfeld, D.L. (1978). *The Boston Housing Dataset*. Available at: https://www.cs.toronto.edu/~delve/data/boston/bostonDetail.html

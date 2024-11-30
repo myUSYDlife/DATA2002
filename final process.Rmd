@@ -1,0 +1,136 @@
+---
+title: "final process"
+author: "Baiheng Zhou"
+date: "10/27/2021"
+output:
+  html_document:
+    fig_caption: yes
+    self_contained: yes
+    theme: flatly
+    toc: true
+    toc_depth: 4
+    toc_width: 6
+    toc_float: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction to Boston House Price data
+
+```{r}
+
+library(tidyverse)
+library(knitr)
+library(gt)
+url = "https://raw.githubusercontent.com/DATA2002/data/master/boston.csv"
+boston_data = readr::read_csv(url)
+
+```
+
+```{r, message=FALSE}
+
+boston_data = boston_data %>%
+  mutate(LMEDV = log(MEDV))
+
+```
+
+
+# 1. Create Full Model
+
+```{r}
+
+M0 = lm(LMEDV ~ 1, data = boston_data)  # Null model
+M1 = lm(LMEDV ~ . - MEDV, data = boston_data)  # Full model
+
+round(summary(M1)$coef, 3)
+
+```
+
+```{r}
+
+library(ggfortify)
+autoplot(M1, which = 1:2) + theme_bw()
+
+```
+
+# 2. Assumption testing for full model (make sure it satisfies the assumption)
+
+- Linearity 
+-- pass
+- Independence 
+-- The origin of the boston housing data is Natural
+- Homoskedasticity 
+-- Data above the line and under the line have similar numbers
+- Normality pass
+-- QQ plot follow the
+
+# 3. Create model by using AIC
+
+```{r}
+
+stepm = step(M1)
+
+```
+
+```{r}
+
+stepm
+
+```
+
+```{r}
+
+library(ggfortify)
+autoplot(stepm, which = 1:2) + theme_bw()
+
+```
+
+# 4. Find the best model
+
+```{r}
+
+library(caret)
+
+control = trainControl(method = "repeatedcv", number = 10, repeats = 10)
+
+step_model = LMEDV ~ CRIM + ZN + CHAS + NOX + RM + DIS + RAD + TAX + PTRATIO + B + LSTAT
+full_model = LMEDV ~ CRIM + ZN + INDUS + CHAS + NOX + RM + AGE + DIS + RAD + TAX + PTRATIO + B + LSTAT
+simple_model = LMEDV ~ CRIM
+
+step_cv = train(step_model, method = "lm", data = boston_data, trControl = control)
+full_cv = train(full_model, method = "lm", data = boston_data, trControl = control)
+simple_cv = train(simple_model, method = "lm", data = boston_data, trControl = control)
+
+results <- resamples(list(simple = simple_cv,
+                          step = step_cv,
+                          full = full_cv))
+summary(results)
+
+p1 = ggplot(results, metric = "RMSE") +
+  theme_classic() +
+  labs(y = "RMSE")
+
+p2 = ggplot(results, metric = "MAE") +
+  theme_classic() +
+  labs(y = "MAE")
+
+cowplot::plot_grid(p1, p2, ncol = 1)
+
+```
+
+# 5. Assumption testing for the best model
+
+Step_model is a little bit better than full_model.
+
+- Linearity 
+-- pass
+- Independence 
+-- The origin of the boston housing data is Natural
+- Homoskedasticity 
+-- Data above the line and under the line have similar numbers
+- Normality pass
+-- QQ plot follow the
+

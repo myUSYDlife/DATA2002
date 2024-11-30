@@ -1,0 +1,398 @@
+---
+title: "Understanding House Price in Science"
+subtitle: "Final Project"
+author: 
+  - "Baiheng Zhou --- Seunghyun Lee --- Zijun Shi"
+  - "Jun Zhang --- Yoffie Wu"
+  - "--------------------------------------------"
+date: "`r Sys.Date()`"
+output:
+  xaringan::moon_reader:
+    css: ["assets/sydney-fonts.css", "assets/sydney.css"]
+    self_contained: false # if true, fonts will be stored locally
+    seal: true 
+    includes:
+      in_header: "assets/mathjax-equation-numbers.html"
+    nature:
+      beforeInit: ["assets/remark-zoom.js", "https://platform.twitter.com/widgets.js"]
+      highlightStyle: github
+      highlightLines: true
+      ratio: 16:9
+      countIncrementalSlides: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r xaringan-tile-view, echo=FALSE}
+xaringanExtra::use_tile_view()
+```
+
+```{r xaringan-scribble, echo=FALSE}
+xaringanExtra::use_scribble()
+```
+
+```{r xaringan-panelset, echo=FALSE}
+xaringanExtra::use_panelset()
+```
+
+```{r, message=FALSE, echo=FALSE}
+library(tidyverse)
+library(knitr)
+library(gt)
+url = "https://raw.githubusercontent.com/DATA2002/data/master/boston.csv"
+boston_data = readr::read_csv(url)
+```
+
+class: segue-red
+
+## <span style="color:white"> Introduction and Data description</span>
+
+## Appropriate model selection with Four Assumptions
+
+## Conclusions and Limitations
+
+---
+
+class: segue-red
+
+# <span style="color:white">Part 1: Introduction and Data description</span>
+
+---
+
+class: segue
+
+background-image: url("https://www.healthyplace.com/sites/default/files/blogs/Anxiety-140-Healthyplace.jpg")
+background-position: 100% 100%
+background-size: 100% 100%
+
+--
+
+class: segue
+
+<div style="font-size:100px"><span style = "color:gold">Raising House Price !!!</span></div>
+
+---
+
+class: segue
+
+## <span style = "color:white">Find a way to balance people's wealth and numerous elements that can effect the house price</span>
+
+## <span style = "color:white">**Predict** the price with the dataset by</span> <span style = "color:yellow">**Multiple Regression**</span>
+
+---
+
+# The Boston Housing Dataset
+
+- 506 .red[cases] in different towns about Boston housing in 14 .blue[variables] collected by *the U.S Census Service concerning housing in the area of Boston Mass*.
+
+- The **prototask** of this dataset: .red[price], in which **the median value of a home** is to be **predicted**.
+
+```{r}
+
+knitr::kable(head(boston_data))
+
+```
+
+- Table shows the *first 6 cases* in dataset
+
+---
+
+- CRIM - per capita **crime rate** by town
+- ZN - **proportion of residential land zoned** for lots over 25,000 sq.ft.
+- INDUS - proportion of **non-retail business acres** per town.
+- CHAS - Charles River dummy variable (1 if tract bounds river; 0 otherwise)
+- NOX - **nitric oxides concentration** (parts per 10 million)
+- RM - average **number of rooms** per dwelling
+- AGE - proportion of owner-occupied units built prior to 1940
+- DIS - weighted **distances** to five Boston employment **centres**
+- RAD - index of **accessibility to radial highways**
+- TAX - full-value **property-tax rate** per $10,000
+- PTRATIO - **pupil-teacher ratio** by town
+- B - 1000(Bk - 0.63)^2 where Bk is **the proportion of blacks** by town
+- LSTAT - % lower status of the **population**
+- MEDV - .red[**Median value of owner-occupied homes in $1000's**]
+
+---
+
+class: segue-red
+
+## <span style="color:white">Part 2: Appropriate model selection with Four Assumptions</span>
+
+---
+
+class: segue
+
+## <span style = "color:white">**Simple Model**: the prediction value with <span style = "color:yellow">**one**</span> variable</span>
+
+## <span style = "color:white">**Full Model**: the prediction value with <span style = "color:yellow">**all**</span> variables</span>
+
+## <span style = "color:white">**Step Model**: the prediction value with variables after <span style = "color:yellow">**forward and backward**</span> stepwise selection by <span style = "color:yellow">**Akaike information criterion (AIC)**</span> </span>
+
+---
+
+# Basic model without any transformation
+
+```{r, fig.align='center',fig.width = 16,fig.height = 6.55, fig.retina=2, warning=FALSE, echo=FALSE, message=FALSE}
+
+library(ggfortify)
+
+M1 = lm(MEDV ~ ., data = boston_data)  # Full model
+autoplot(M1, which = 1:2) + theme_bw(base_size = 20)
+
+```
+
+--
+
+.font160[**Cannot pass .red[Linearity assumption] !!! ⚠️**]
+
+---
+
+# .red[Log] transformation was used for **MEDV** column
+
+.panelset[
+.panel[.panel-name[New full model]
+
+```{r, fig.align='center',fig.width = 16,fig.height = 6.55, fig.retina=2, warning=FALSE, echo=FALSE, message=FALSE}
+
+M2 = lm(log(MEDV) ~ ., data = boston_data)  # Full model in log
+autoplot(M2, which = 1:2) + theme_bw(base_size = 20)
+
+```
+
+]
+
+.panel[.panel-name[Assumptions]
+
+- .font120[Linearity : ✅ No obvious pattern in Residuals vs Fitted values plot.]
+
+
+- .font120[Homoskedasticity : ✅ The residuals don't appear to be fanning out over the range of the fitted value.]
+
+
+- .font120[Independence : ✅ Data selected natural from different towns. ]
+
+
+- .font120[Normality : ✅ Most patterns stick to the diagonal line. (this data has large sample size (506), we can apply the Central Limit Theorem.)]
+
+## *All of the assumptions are met.* 
+
+]
+]
+
+---
+
+# AIC .orange[backward] and .purple[forward] searching
+
+- **Backward**: Variables were .orange[**removed**] from the full model until AIC no longer decreased.
+
+- **Forward**: Variables were .purple[**added**] to the null model until AIC no longer decreased.
+
+.panelset[
+.panel[.panel-name[Backward Model]
+
+.scroll-box-10[
+
+```{r, echo=FALSE, message=FALSE}
+
+M0 = lm(log(MEDV) ~ 1, data = boston_data)  # Null model
+step.back.aic = step(M2, direction = "backward", trace = FALSE)
+drop1(step.back.aic , test = "F")
+
+```
+
+]
+
+]
+
+.panel[.panel-name[Forward Model]
+
+.scroll-box-10[
+
+```{r, echo=FALSE, message=FALSE}
+
+step.fwd.aic = step(M0, scope = list(lower = M0, upper = M2), direction = "forward", trace = FALSE)
+add1(step.fwd.aic, test="F", scope = M2)
+
+```
+
+]
+
+]
+]
+
+Both model remove **variables INDUS and AGE**
+
+---
+
+## Hypothesis testing 
+
+### Dropping out the AGE
+
+> $log(MEDV) = O + \beta_1 CRIM + \beta_2 ZN + \beta_3 CHAS + \beta_4 NOX + \beta_5 RM + \beta_6 DIS + \beta_7 RAD \\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ + \beta_8 TAX + \beta_9 PTRATIO + \beta_{10} B + \beta_{11} LSTAT + \beta_{12} INDUS + \beta_{13} AGE+ ε$
+
+- **Hypothesis**: $H_0: β_{13}=0$ vs $H_1: β_{13}≠0$
+
+- **Assumptions**: The residuals $ε_i$ are iid $N(0,σ^2)$ and there is a linear relationship between y and x..white[sds] .green[ (All of the assumptions are met. ✅)]
+
+- **Test Statistic**: $T=\hat{β_{13}}/SE(\hat{β_{13}})∼t_{n−p}$ under $H_0$ where p is the number of estimated coefficients (including the intercept) and n is the sample size.
+
+- **Observed test statistic**: $t_0 = 0.0002106/ 0.0005287 = 0.398$
+
+- **P-value**: $2P(t_{492}>= |0.398|) = 0.691$
+
+- **Conclusion**: Do not reject $H_0$ at the 5% level of significance as the p-value is greater than 0.05. Hence, there is no evidence to suggest that there is a significant linear relationship between MEDV and AGE and it can be dropped from the model. 
+
+---
+
+# Find the **best** model
+
+- RMSE: Root mean square error
+- MAE: Mean absolute error
+
+```{r, fig.align='center',fig.width = 15,fig.height = 5.25, fig.retina=2, warning=FALSE, echo=FALSE, message=FALSE}
+
+set.seed(4)
+library(caret)
+control = trainControl(method = "repeatedcv", number = 10, repeats = 10)
+step_model = log(MEDV) ~ CRIM + ZN + CHAS + NOX + RM + DIS + RAD + TAX + PTRATIO + B + LSTAT
+full_model = log(MEDV) ~ CRIM + ZN + INDUS + CHAS + NOX + RM + AGE + DIS + RAD + TAX + PTRATIO + B + LSTAT
+simple_model = log(MEDV) ~ RM
+step_cv = train(step_model, method = "lm", data = boston_data, trControl = control)
+full_cv = train(full_model, method = "lm", data = boston_data, trControl = control)
+simple_cv = train(simple_model, method = "lm", data = boston_data, trControl = control)
+results <- resamples(list(simple = simple_cv,
+                          step = step_cv,
+                          full = full_cv))
+
+p1 = ggplot(results, metric = "RMSE") +
+  theme_bw(base_size = 20) +
+  labs(y = "RMSE")
+p2 = ggplot(results, metric = "MAE") +
+  theme_bw(base_size = 20) +
+  labs(y = "MAE")
+cowplot::plot_grid(p1, p2,  ncol = 1)
+
+```
+
+--
+
+## .darkred[Step model] is the best choice
+
+---
+
+# Final **stable regression model**
+
+Because AIC forward and backward searching selected same significant variables on predicting house price.
+
+```{r, echo=FALSE}
+
+stepm = step(M2, trace = F)
+stepm
+
+```
+
+--
+
+.white[empty line]
+
+> $log(MEDV) = 4.0837 - 0.0103 \times CRIM + 0.0011 \times ZN + 0.1051 \times CHAS \\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ - 0.7217 \times NOX + 0.0907 \times RM - 0.0517 \times DIS + 0.0134 \times RAD \\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ - 0.0006 \times TAX - 0.0374 \times PTRATIO + 0.0004 \times B - 0.0286 \times LSTAT + ε$
+
+---
+
+# .blue[Step model] plots
+
+.panelset[
+.panel[.panel-name[The best model]
+
+```{r, fig.align='center',fig.width = 16,fig.height = 6.55, fig.retina=2, warning=FALSE, echo=FALSE, message=FALSE}
+
+autoplot(stepm, which = 1:2) + theme_bw(base_size = 20)
+
+```
+
+]
+
+.panel[.panel-name[Assumptions]
+
+- .font120[Linearity : ✅ No obvious pattern in Residuals vs Fitted values plot.]
+
+
+- .font120[Homoskedasticity : ✅ The residuals don't appear to be fanning out over the range of the fitted value.]
+
+
+- .font120[Independence : ✅ Data selected natural from different towns. ]
+
+
+- .font120[Normality : ✅ Most patterns stick to the diagonal line. (this data has large sample size (506), we can apply the Central Limit Theorem.)]
+
+## *All of the assumptions are met.* 
+
+]
+]
+
+---
+
+class: segue-red
+
+# Part 3: Conclusions and Limitations
+
+---
+
+# Conclusions
+
+> $log(MEDV) = 4.0837 - 0.0103 \times CRIM + 0.0011 \times ZN + 0.1051 \times CHAS \\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ - 0.7217 \times NOX + 0.0907 \times RM - 0.0517 \times DIS + 0.0134 \times RAD \\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ - 0.0006 \times TAX - 0.0374 \times PTRATIO + 0.0004 \times B - 0.0286 \times LSTAT + ε$
+
+.white[empty line]
+
+**Log-linear model** $$log(Y) = \beta_0 + \beta_1x$$ On average, a one unit increase in $x$ will result in a $\beta_1$ * 100% change in $Y$. 
+
+
+.scroll-box-8[
+
+- A one degree parts per million(ppm) increase in NOX results in 72.17% decrease in MEDV on average, holding other variables are constant. 
+- A 1 CHAS (if tract bounds Charles River) results in 10.51% increase in MEDV on average, holding other variables are constant.
+- A one number of room increase in RM results in 9.07% increase in MEDV on average, holding other variables are constant.
+- A one unit weighted distances to five Boston employment centres increase in DIS results in 5.17% decrease in MEDV on average, holding other variables are constant.
+- A one percent  increase in PTRATIO results in 3.75% decrease in MEDV on average, holding other variables are constant.
+- A one percent increase in LSTAT results in 2.86% decrease in MEDV on average, holding other variables are constant.
+- A one index increase in RAD results in 1.34% increase in MEDV on average, holding other variables are constant.
+- A one unit of rate increase in CRIM results in 1.03% decrease in MEDV on average, holding other variables are constant.
+- A one unit of proportion  increase in ZN results in 0.11% increase in MEDV on average, holding other variables are constant.
+- A one increase in TAX results in 0.06% decrease in MEDV on average, holding other variables are constant.
+- A one 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town increase in B results in 0.04% increase in MEDV on average, holding other variables are constant.
+
+]
+
+---
+
+# Key Conclusions
+
+.blockquote[- House price down ⬇️: CRIM, NOX, DIS, TAX, PTRATIO, LSTAT
+- House price up ⬆️: ZN, CHAS, RM, RAD, B]
+
+As NOX and CHAS is a variable that effects the house price the most, we can infer that the demand for the clean air and nature view was high at that moment, which also aligns with the fact that the data was originally published in "Hedonic prices and the demand for clean air".
+
+The increase in room number (represented by RM), decrease to five Boston employment centres(represented by DIS), decrease pupil-teacher ratio by town (represented by PTRATIO) is also factor that increases the boston price.  
+
+The bigger the ratio of lower status of the population, it  decreased the Boston house price and better accessibility to radial highways increased the Boston house price while increase in crime rate decreased the Boston house price. 
+
+---
+
+# Limitations
+
+- Assumption for Homoskedascity : Even though the residuals vs fitted plot showed fairly random plot, since it had some part mildly fanning out, further test is needed for Homoskedascity. 
+
+- Bounded MEDV : The house price (MEDV) was censored at 50.00 (50,000 dollar). That is, 16 cases that has 50.00 at their MEDV might have higher price than $50,000. Therefore, further research with precise house price is needed to get the model that is better representing the Boston house price. 
+
+- Small sized data set : The data set has 506 cases, which is large enough to make the model statistically reliable and representative. However, as the dataset sheet argued, it is not enough number to represetn the whole Boston house price. Increased number of data with better representation on overall Boston house price is needed to make the model more representative. 
+
+
+---
+
+# References
+
+Alan Crawford. (2021, September 20). *The Global Housing Market Is Broken, and It’s Dividing Entire Countries*. Available at: https://www.bloomberg.com/news/features/2021-09-19/global-housing-markets-are-hurting-and-it-s-getting-political
+
+Harrison, D. & Rubinfeld, D.L. (1978). *The Boston Housing Dataset*. Available at: https://www.cs.toronto.edu/~delve/data/boston/bostonDetail.html
